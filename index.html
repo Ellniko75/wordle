@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>Wordle</h1>
+      <div class="gameRow">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+      <div class="gameRow">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+      <div class="gameRow">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+      <div class="gameRow">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+      <div class="gameRow">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+    </div>
+  </body>
+  <script>
+    let playing = true;
+    let correctWord = "";
+    //set the random word
+    fetch(" https://random-word-api.herokuapp.com/word?length=5&lang=es").then(
+      (r) => {
+        r.json().then((data) => {
+          correctWord = data[0];
+        });
+      }
+    );
+
+    let rowCurrentlyPlaying = 0;
+    let letterIndex = -1;
+    document.addEventListener("keydown", (e) => {
+      if (!playing) return;
+      const { key } = e;
+
+      if (key == "Backspace") {
+        return handleDeletion();
+      }
+      if (key == "Enter") {
+        return submitChoice();
+      }
+
+      if (key.length != 1) return;
+      const row = getCurrentRow();
+      if (letterIndex + 1 <= row.length - 1)
+        row[letterIndex + 1].textContent = key.toUpperCase();
+      playPopAnimation(row[letterIndex + 1]);
+
+      if (letterIndex < row.length - 1) letterIndex++;
+    });
+
+    function getCurrentRow() {
+      const rows = document
+        .querySelectorAll(".gameRow")
+        [rowCurrentlyPlaying].querySelectorAll("div");
+      return rows;
+    }
+
+    function handleDeletion() {
+      const row = document
+        .querySelectorAll(".gameRow")
+        [rowCurrentlyPlaying].querySelectorAll("div");
+
+      if (letterIndex >= 0) row[letterIndex].textContent = "";
+
+      if (letterIndex >= 0) letterIndex--;
+    }
+    function submitChoice() {
+      const row = getCurrentRow();
+
+      let totalWordCorrect = 0;
+      //change color of each letter when submitting the answer
+      for (let i = 0; i < correctWord.length; i++) {
+        const letterExpected = correctWord[i];
+        const htmlElement = row[i];
+        const letterGotten = htmlElement.textContent;
+
+        const areSame =
+          letterExpected.toLowerCase() == letterGotten.toLowerCase();
+
+        if (areSame) {
+          htmlElement.style.backgroundColor = "green";
+          totalWordCorrect++;
+        } else if (correctWord.toUpperCase().split("").includes(letterGotten)) {
+          htmlElement.style.backgroundColor = "yellow";
+        } else {
+          htmlElement.style.backgroundColor = "red";
+        }
+      }
+      if (totalWordCorrect == correctWord.length) {
+        playing = false;
+        return;
+      }
+      rowCurrentlyPlaying++;
+      letterIndex = -1;
+
+      if (rowCurrentlyPlaying > 4) {
+        alert(`you lost puto, la word era ${correctWord}`);
+        playing = false;
+      }
+    }
+    function playPopAnimation(el) {
+      el.style.animation = "none";
+      el.offsetHeight; /* trigger reflow */
+      el.style.animation = "pop 0.2s forwards";
+    }
+  </script>
+</html>
